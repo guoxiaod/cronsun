@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# Startup script for cronsun-web
+# chkconfig: 2345 92 36
+# description: cronsun-web Daemon
+# processname: cronweb
+# config: /etc/cronsun/base.json
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source function library.
+if [ -f /etc/init.d/functions ] ; then
+  . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+  . /etc/rc.d/init.d/functions
+else
+  exit 0
+fi
+
+if [ -f /etc/sysconfig/cronsun ]; then
+  . /etc/sysconfig/cronsun
+fi
+
+# Some definitions.
+cronweb=/usr/sbin/cronweb
+prog=cronweb
+RETVAL=0
+pidfile=/var/run/cronweb.pid
+lockfile=/var/lock/subsys/cronweb
+webroot=/usr/share/cronsun/
+
+CONFIGFILE=/etc/cronsun/base.json
+
+OPTIONS=-conf $CONFIGFILE
+
+start() {
+    cd $webroot
+    echo -n $"Starting $prog: "
+    daemon --pidfile=$pidfile $cronweb $OPTIONS 
+    RETVAL=$?
+    echo
+    if [ $RETVAL = 0 ] ; then
+       touch $lockfile
+    else
+       RETVAL=1
+    fi
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc -d 30 $cronweb
+    RETVAL=$?
+    echo
+    if [ $RETVAL = 0 ] ; then
+       rm -f $lockfile
+    else
+       RETVAL=1
+    fi
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop 
+        ;;
+    status)
+        status $cronweb
+        RETVAL=$?
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    condrestart)
+        [ -f $lockfile ] && restart
+        ;;
+    *)
+        echo $"Usage: $prog {start|stop|restart|status}"
+        exit 1
+esac
+
+exit $RETVAL
+
