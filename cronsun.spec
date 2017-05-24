@@ -50,13 +50,14 @@ bash ./build.sh
 %{__mkdir_p} ${RPM_BUILD_ROOT}%{_prefix}/lib/systemd/system/
 
 %{__cp} dist/conf/*.json ${RPM_BUILD_ROOT}%{_sysconfdir}/cronsun/
+sed -i -e 's/"ui"/"\/usr\/share\/cronsun\/ui"/' ${RPM_BUILD_ROOT}%{_sysconfdir}/cronsun/web.json
 %{__cp} -r dist/ui ${RPM_BUILD_ROOT}%{_datadir}/cronsun/
 %{__install} -m0755 dist/cronnode ${RPM_BUILD_ROOT}%{_sbindir}/
 %{__install} -m0755 dist/cronweb ${RPM_BUILD_ROOT}%{_sbindir}/
 
 %if %{?rhel} == 6
-%{__install} -pm 0755 rpms/cronnode.service ${RPM_BUILD_ROOT}%{_sysconfdir}/rc.d/init.d/cronnode
-%{__install} -pm 0755 rpms/cronweb.service ${RPM_BUILD_ROOT}%{_sysconfdir}/rc.d/init.d/cronweb
+%{__install} -pm 0755 rpms/cronnode.init ${RPM_BUILD_ROOT}%{_sysconfdir}/rc.d/init.d/cronnode
+%{__install} -pm 0755 rpms/cronweb.init ${RPM_BUILD_ROOT}%{_sysconfdir}/rc.d/init.d/cronweb
 %endif
 
 %if %{?rhel} == 7

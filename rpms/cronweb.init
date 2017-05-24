@@ -7,9 +7,6 @@
 # config: /etc/cronsun/base.json
 
 # Source function library.
-. /etc/rc.d/init.d/functions
-
-# Source function library.
 if [ -f /etc/init.d/functions ] ; then
   . /etc/init.d/functions
 elif [ -f /etc/rc.d/init.d/functions ] ; then
@@ -28,14 +25,23 @@ prog=cronweb
 RETVAL=0
 pidfile=/var/run/cronweb.pid
 lockfile=/var/lock/subsys/cronweb
-webroot=/usr/share/cronsun/
+logfile=/var/log/cronsun.log
 
 CONFIGFILE=/etc/cronsun/base.json
 
-OPTIONS=-conf $CONFIGFILE
+OPTIONS="-conf $CONFIGFILE -l 4 >> $logfile 2>&1 &"
 
 start() {
-    cd $webroot
+    pid="$(__pids_pidof "$cronweb")"
+
+    if [ x"$pid" != x ]; then 
+        [ "$BOOTUP" = "color" ] && $SETCOLOR_WARNING
+        echo -n "WARNING: $cronweb($pid) already running!"
+        [ "$BOOTUP" = "color" ] && $SETCOLOR_NORMAL
+        echo 
+        return 1
+    fi
+
     echo -n $"Starting $prog: "
     daemon --pidfile=$pidfile $cronweb $OPTIONS 
     RETVAL=$?

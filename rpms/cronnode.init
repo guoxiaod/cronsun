@@ -7,9 +7,6 @@
 # config: /etc/cronsun/base.json
 
 # Source function library.
-. /etc/rc.d/init.d/functions
-
-# Source function library.
 if [ -f /etc/init.d/functions ] ; then
   . /etc/init.d/functions
 elif [ -f /etc/rc.d/init.d/functions ] ; then
@@ -28,12 +25,22 @@ prog=cronnode
 RETVAL=0
 pidfile=/var/run/cronnode.pid
 lockfile=/var/lock/subsys/cronnode
+logfile=/var/log/cronsun.log
 
 CONFIGFILE=/etc/cronsun/base.json
 
-OPTIONS=-conf $CONFIGFILE
+OPTIONS="-conf $CONFIGFILE -l 4 >> $logfile 2>&1 &"
 
 start() {
+    pid="$(__pids_pidof "$cronnode")"
+
+    if [ x"$pid" != x ]; then 
+        [ "$BOOTUP" = "color" ] && $SETCOLOR_WARNING
+        echo -n "WARNING: $cronnode($pid) already running!"
+        [ "$BOOTUP" = "color" ] && $SETCOLOR_NORMAL
+        echo 
+        return 1
+    fi
     echo -n $"Starting $prog: "
     daemon --pidfile=$pidfile $cronnode $OPTIONS 
     RETVAL=$?
